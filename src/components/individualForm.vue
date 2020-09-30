@@ -8,13 +8,12 @@
                     type="text"
                     v-model="name"
                     label="Name"
-                    required="true"
             ></animated-input>
             <animated-input
                     type="email"
                     v-model="email"
                     label="Email"
-                    required="true"
+                    :required="true"
             ></animated-input>
 
             <animated-input

@@ -96,7 +96,7 @@
                 }
             },
             hasValue() {
-                return !!this.value.length;
+                return !!this.value;
             },
             text() {
                 if (this.hasError) {

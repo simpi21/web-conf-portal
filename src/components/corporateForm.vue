@@ -3,40 +3,43 @@
         <div v-if="sent">
             <p style="font-size: 18px;color:#00d1b2">Thank you for getting in touch!</p>
         </div>
-        <form @submit="onSubmit">
+        <form @submit.prevent="onSubmit">
             <animated-input
                     type="text"
-                    v-model="name"
+                    v-model="formData.name"
                     label="Name"
-                    required="true"
             ></animated-input>
             <animated-input
                     type="email"
-                    v-model="email"
+                    v-model="formData.email"
                     label="Email"
-                    required="true"
+                    :required="true"
             ></animated-input>
 
             <select-field
-                    v-model="company"
+                    v-model="formData.company"
                     label="Company"
                     :options="companies"
                     :clearable="false"
             />
             <animated-input
                     type="tel"
-                    v-model="phone"
+                    v-model="formData.phone"
                     label="Phone"
             ></animated-input>
 
-            <button class="btn">Webinar category</button>
-        </form>
+            <button class="btn" type="submit">Webinar category</button>
+                    </form>
+
     </div>
 </template>
 
 <script>
     import AnimatedInput from "./AnimatedInput";
     import selectField from 'shapla-select-field';
+    import {db} from '../firebase';
+
+    const documentPath = 'contacts/portal';
 
     export default {
         name: "corporateForm",
@@ -46,6 +49,9 @@
         },
         data() {
             return {
+                firebaseData: null,
+                formData: {},
+                state: 'loading',
                 sent: false,
                 name: '',
                 email: '',
@@ -55,18 +61,38 @@
 
             }
         },
+        firestore() {
+            return {
+                firebaseData: db.doc(documentPath),
+            }
+        },
         methods: {
-            onSubmit(evt) {
-                this.sent = true
-                evt.preventDefault();
-                this.name = '';
-                this.email = '';
-                this.company = '';
-                this.phone = '';
+            async onSubmit() {
+                try {
+                    await db.doc(documentPath).set(this.formData);
+                    this.state = 'synced';
+                    this.sent = true,
+                        this.formData.name = '';
+                    this.formData.email = '';
+                    this.formData.company = '';
+                    this.formData.phone = '';
+
+                } catch (error) {
+                    this.errorMessage = JSON.stringify(error)
+                    this.state = 'error';
+                }
+
 
             }
-
+        },
+        created: async function () {
+            const docRef = db.doc(documentPath);
+            let data = (await docRef.get()).data();
+            if (!data) {
+                data = {name: '', email: '', company: '', phone: '',}
+            }
         }
+
     }
 </script>
 
@@ -90,6 +116,7 @@
         padding: 14px 36px 14px 36px;
         outline: none;
         border: none;
+        width:100%;
     }
 
     .has-icons-right .shapla-text-field__input {
